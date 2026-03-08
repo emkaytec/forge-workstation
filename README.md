@@ -32,6 +32,8 @@ This repository contains the infrastructure and workstation management code for 
 - `ansible/roles/shell/` - shared interactive shell configuration for the primary user
 - `terraform/modules/gcp-workstation/` - copied GCP workstation Terraform module source
 
+The Terraform workstation module supports separate names for the GCP instance and the in-guest workstation hostname. By default, the GCP instance name is prefixed as `ws-<workstation_name>`, while the Linux and Tailscale hostnames stay aligned to `workstation_name`.
+
 ## Local Inventory
 
 Real workstation names and personal identity values are kept in the untracked file `ansible/inventory/hosts.local.yml`.

@@ -7,6 +7,7 @@ TAILSCALE_MARKER_FILE="$STATE_DIR/tailscale-enrolled.done"
 HOME_MIGRATION_MARKER=".forge-persistent-home"
 HOME_STAGING_MOUNT="/mnt/forge-home-staging"
 FORGE_USER="${forge_user}"
+WORKSTATION_NAME="${workstation_name}"
 HOME_MOUNT_PATH="${home_mount_path}"
 HOME_DISK_DEVICE_PATH="${home_disk_device_path}"
 HOME_BACKUP_PATH="${home_mount_path}.pre-persistent"
@@ -74,6 +75,16 @@ install_tailscale() {
 
   retry 5 5 bash -c 'curl -fsSL https://tailscale.com/install.sh | sh'
   systemctl enable --now tailscaled
+}
+
+ensure_workstation_hostname() {
+  local current_hostname
+  current_hostname="$(hostnamectl --static 2>/dev/null || hostname)"
+  if [ "$current_hostname" = "$WORKSTATION_NAME" ]; then
+    return 0
+  fi
+
+  hostnamectl set-hostname "$WORKSTATION_NAME"
 }
 
 ensure_forge_user() {
@@ -248,6 +259,7 @@ main() {
     sudo
 
   ensure_forge_user
+  ensure_workstation_hostname
   ensure_persistent_home
   install_gcloud_cli
   install_tailscale

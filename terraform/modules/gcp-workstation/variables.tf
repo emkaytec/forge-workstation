@@ -9,8 +9,14 @@ variable "zone" {
 }
 
 variable "workstation_name" {
-  description = "Name of the workstation VM."
+  description = "Logical workstation name used for the Linux hostname and Tailscale hostname by default."
   type        = string
+}
+
+variable "instance_name" {
+  description = "GCP instance name. Empty value defaults to ws-<workstation_name>."
+  type        = string
+  default     = ""
 }
 
 variable "machine_type" {

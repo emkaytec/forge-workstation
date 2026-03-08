@@ -1,17 +1,19 @@
 locals {
+  instance_name_effective      = trimspace(var.instance_name) != "" ? trimspace(var.instance_name) : "ws-${var.workstation_name}"
   default_network_tag          = "${var.workstation_name}-workstation"
   network_tags                 = distinct(concat(var.network_tags, [local.default_network_tag]))
   tailscale_hostname_effective = trimspace(var.tailscale_hostname) != "" ? trimspace(var.tailscale_hostname) : var.workstation_name
   tailscale_tags_csv           = join(",", var.tailscale_tags)
   service_account_id           = "ws-${substr(md5(var.workstation_name), 0, 24)}"
-  home_disk_device_path        = "/dev/disk/by-id/google-${var.workstation_name}-home"
+  home_disk_name               = "${local.instance_name_effective}-home"
+  home_disk_device_path        = "/dev/disk/by-id/google-${local.home_disk_name}"
   home_mount_path              = "/home/${var.forge_user}"
 }
 
 resource "google_service_account" "workstation" {
   project      = var.project_id
   account_id   = local.service_account_id
-  display_name = "Workstation service account for ${var.workstation_name}"
+  display_name = "Workstation service account for ${local.instance_name_effective}"
 }
 
 resource "google_secret_manager_secret_iam_member" "workstation_tailscale_authkey_accessor" {
@@ -24,7 +26,7 @@ resource "google_secret_manager_secret_iam_member" "workstation_tailscale_authke
 resource "google_compute_disk" "workstation_home" {
   project = var.project_id
   zone    = var.zone
-  name    = "${var.workstation_name}-home"
+  name    = local.home_disk_name
   type    = "pd-balanced"
   size    = var.home_disk_size_gb
 }
@@ -32,7 +34,7 @@ resource "google_compute_disk" "workstation_home" {
 resource "google_compute_instance" "workstation" {
   project                   = var.project_id
   zone                      = var.zone
-  name                      = var.workstation_name
+  name                      = local.instance_name_effective
   machine_type              = var.machine_type
   tags                      = local.network_tags
   allow_stopping_for_update = true
@@ -67,6 +69,7 @@ resource "google_compute_instance" "workstation" {
 
   metadata_startup_script = templatefile("${path.module}/templates/startup.sh.tftpl", {
     project_id            = var.project_id
+    workstation_name      = var.workstation_name
     tailscale_secret_name = var.tailscale_secret_name
     tailscale_hostname    = local.tailscale_hostname_effective
     tailscale_tags_csv    = local.tailscale_tags_csv
