@@ -1,6 +1,6 @@
-# Workstation Ansible
+# Forge Workstation
 
-This repository is the local Ansible control repo for managing remote development workstations created in GCP and reached over Tailscale SSH.
+This repository contains the infrastructure and workstation management code for remote development environments, including Ansible host configuration and a reusable GCP workstation Terraform module.
 
 ## Assumptions
 
