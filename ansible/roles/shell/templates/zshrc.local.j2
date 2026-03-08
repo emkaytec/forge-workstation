@@ -1,0 +1,17 @@
+export PATH="{{ shell_local_bin_path }}:$PATH"
+
+setopt APPEND_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_FIND_NO_DUPS
+setopt HIST_IGNORE_ALL_DUPS
+setopt HIST_IGNORE_SPACE
+setopt HIST_REDUCE_BLANKS
+setopt HIST_SAVE_NO_DUPS
+setopt SHARE_HISTORY
+
+if [ -d "$HOME/.zshrc.d" ]; then
+  for shell_rc in "$HOME"/.zshrc.d/*.zsh; do
+    [ -r "$shell_rc" ] && source "$shell_rc"
+  done
+  unset shell_rc
+fi

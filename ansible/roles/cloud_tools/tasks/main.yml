@@ -1,0 +1,84 @@
+---
+- name: Ensure apt keyring directory exists
+  ansible.builtin.file:
+    path: "{{ cloud_tools_apt_keyring_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install GitHub CLI apt signing key
+  ansible.builtin.get_url:
+    url: "{{ gh_apt_key_url }}"
+    dest: "{{ gh_apt_key_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure GitHub CLI apt repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/github-cli.list
+    content: "{{ gh_apt_repo }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install Google Cloud apt signing key
+  ansible.builtin.get_url:
+    url: "{{ gcloud_apt_key_url }}"
+    dest: "{{ gcloud_apt_key_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure Google Cloud apt repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/google-cloud-sdk.list
+    content: "{{ gcloud_apt_repo }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Check installed GitHub CLI version
+  ansible.builtin.command: gh --version
+  register: gh_version_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Check installed Google Cloud CLI version
+  ansible.builtin.command: gcloud version --format=json
+  register: gcloud_version_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install cloud tool packages
+  ansible.builtin.apt:
+    name:
+      - "{{ gh_package_name }}"
+      - "{{ gcloud_package_name }}"
+    state: present
+    update_cache: true
+  when:
+    - not ansible_check_mode or (gh_version_check.rc == 0 and gcloud_version_check.rc == 0)
+
+- name: Check installed AWS CLI version
+  ansible.builtin.command: "{{ awscli_binary_path }} --version"
+  register: awscli_version_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install AWS CLI
+  ansible.builtin.shell: >-
+    tmpdir=$(mktemp -d) &&
+    curl -fsSL "{{ awscli_download_url }}" -o "$tmpdir/awscliv2.zip" &&
+    unzip -q "$tmpdir/awscliv2.zip" -d "$tmpdir" &&
+    "$tmpdir/aws/install" --bin-dir /usr/local/bin --install-dir "{{ awscli_install_dir }}" --update &&
+    rm -rf "$tmpdir"
+  args:
+    executable: /bin/bash
+  when:
+    - not ansible_check_mode
+    - awscli_version_check.rc != 0 or (awscli_version_check.stdout is not search(awscli_version | regex_escape()))

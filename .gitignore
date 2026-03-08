@@ -1,0 +1,10 @@
+# Ansible retry files
+*.retry
+
+# Ansible temporary and local override files
+*.orig
+*.bak
+ansible/inventory/hosts.local.yml
+
+# macOS
+.DS_Store

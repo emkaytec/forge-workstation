@@ -1,0 +1,77 @@
+---
+- name: Install shell packages
+  ansible.builtin.apt:
+    name: "{{ shell_packages }}"
+    state: present
+
+- name: Ensure local bin directory exists
+  ansible.builtin.file:
+    path: "{{ shell_local_bin_path }}"
+    state: directory
+    owner: "{{ shell_user }}"
+    group: "{{ shell_group }}"
+    mode: "0755"
+
+- name: Ensure zsh profile directory exists
+  ansible.builtin.file:
+    path: "{{ shell_zsh_profile_dir }}"
+    state: directory
+    owner: "{{ shell_user }}"
+    group: "{{ shell_group }}"
+    mode: "0755"
+
+- name: Ensure code directory exists
+  ansible.builtin.file:
+    path: "/home/{{ shell_user }}/code"
+    state: directory
+    owner: "{{ shell_user }}"
+    group: "{{ shell_group }}"
+    mode: "0755"
+
+- name: Ensure zsh is the default shell for primary user
+  ansible.builtin.user:
+    name: "{{ shell_user }}"
+    shell: /usr/bin/zsh
+
+- name: Install oh-my-zsh
+  become: true
+  become_user: "{{ shell_user }}"
+  ansible.builtin.git:
+    repo: "{{ shell_zsh_repo }}"
+    dest: "{{ shell_zsh_home }}"
+    version: "{{ shell_zsh_version }}"
+    depth: 1
+
+- name: Install custom oh-my-zsh theme
+  ansible.builtin.copy:
+    src: wiscotrashpanda.zsh-theme
+    dest: "{{ shell_zsh_home }}/themes/wiscotrashpanda.zsh-theme"
+    owner: "{{ shell_user }}"
+    group: "{{ shell_group }}"
+    mode: "0644"
+
+- name: Remove managed bashrc block from previous shell role
+  ansible.builtin.blockinfile:
+    path: "/home/{{ shell_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED WORKSTATION SHELL"
+    state: absent
+    owner: "{{ shell_user }}"
+    group: "{{ shell_group }}"
+    mode: "0644"
+    create: false
+
+- name: Install zsh configuration
+  ansible.builtin.template:
+    src: zshrc.j2
+    dest: "/home/{{ shell_user }}/.zshrc"
+    owner: "{{ shell_user }}"
+    group: "{{ shell_group }}"
+    mode: "0644"
+
+- name: Install local zsh configuration
+  ansible.builtin.template:
+    src: zshrc.local.j2
+    dest: "/home/{{ shell_user }}/.zshrc.local"
+    owner: "{{ shell_user }}"
+    group: "{{ shell_group }}"
+    mode: "0644"

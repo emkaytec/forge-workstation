@@ -1,0 +1,15 @@
+---
+code_editor_user: "{{ workstation_primary_user }}"
+code_editor_group: "{{ workstation_primary_group }}"
+code_editor_home: "/home/{{ code_editor_user }}"
+code_editor_bin_path: "{{ code_editor_home }}/.local/bin/code-server"
+code_editor_config_dir: "{{ code_editor_home }}/.config/code-server"
+code_editor_config_file: "{{ code_editor_config_dir }}/config.yaml"
+code_editor_install_script_url: https://code-server.dev/install.sh
+code_editor_bind_address: 127.0.0.1:8443
+code_editor_auth_mode: none
+code_editor_cert_mode: false
+code_editor_workspace_dir: "{{ code_editor_home }}/code"
+code_editor_service_name: code-server
+code_editor_tailscale_target: http://127.0.0.1:8443
+code_editor_tailscale_https_port: 8443

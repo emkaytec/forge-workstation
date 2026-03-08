@@ -1,0 +1,53 @@
+---
+- name: Refresh apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 86400
+
+- name: Install baseline packages
+  ansible.builtin.apt:
+    name: "{{ base_packages + base_extra_packages }}"
+    state: present
+
+- name: Configure timezone file
+  ansible.builtin.copy:
+    dest: /etc/timezone
+    content: "{{ workstation_timezone }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reconfigure tzdata
+
+- name: Configure localtime symlink
+  ansible.builtin.file:
+    src: "/usr/share/zoneinfo/{{ workstation_timezone }}"
+    dest: /etc/localtime
+    state: link
+    owner: root
+    group: root
+    force: true
+  notify: Reconfigure tzdata
+
+- name: Ensure locale is enabled
+  ansible.builtin.lineinfile:
+    path: /etc/locale.gen
+    regexp: '^#?{{ workstation_locale | regex_escape() }} UTF-8$'
+    line: '{{ workstation_locale }} UTF-8'
+  notify: Generate locales
+
+- name: Configure default locale
+  ansible.builtin.copy:
+    dest: /etc/default/locale
+    content: |
+      LANG={{ workstation_locale }}
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure primary user config directory exists
+  ansible.builtin.file:
+    path: "/home/{{ workstation_primary_user }}/.config"
+    state: directory
+    owner: "{{ workstation_primary_user }}"
+    group: "{{ workstation_primary_group }}"
+    mode: "0755"

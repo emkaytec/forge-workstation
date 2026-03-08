@@ -1,0 +1,35 @@
+---
+docker_user: "{{ workstation_primary_user }}"
+
+docker_apt_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+
+docker_apt_arch: "{{ docker_apt_arch_map.get(ansible_facts['architecture'], ansible_facts['architecture']) }}"
+docker_apt_keyring_dir: /etc/apt/keyrings
+docker_apt_key_url: https://download.docker.com/linux/ubuntu/gpg
+docker_apt_key_path: "{{ docker_apt_keyring_dir }}/docker.asc"
+docker_apt_repo: "deb [arch={{ docker_apt_arch }} signed-by={{ docker_apt_key_path }}] https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
+
+docker_packages:
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-ce
+  - docker-ce-cli
+  - docker-compose-plugin
+
+kubectl_version: v1.34.1
+kubectl_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+kubectl_arch: "{{ kubectl_arch_map.get(ansible_facts['architecture'], ansible_facts['architecture']) }}"
+kubectl_download_url: "https://dl.k8s.io/release/{{ kubectl_version }}/bin/linux/{{ kubectl_arch }}/kubectl"
+kubectl_binary_path: /usr/local/bin/kubectl
+
+helm_version: v3.19.0
+helm_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+helm_arch: "{{ helm_arch_map.get(ansible_facts['architecture'], ansible_facts['architecture']) }}"
+helm_download_url: "https://get.helm.sh/helm-{{ helm_version }}-linux-{{ helm_arch }}.tar.gz"
+helm_binary_path: /usr/local/bin/helm

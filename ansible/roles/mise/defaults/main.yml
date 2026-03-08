@@ -1,0 +1,13 @@
+---
+mise_user: "{{ workstation_primary_user }}"
+mise_group: "{{ workstation_primary_group }}"
+
+mise_bin_path: "/home/{{ mise_user }}/.local/bin/mise"
+mise_config_dir: "/home/{{ mise_user }}/.config/mise"
+mise_config_file: "{{ mise_config_dir }}/config.toml"
+mise_shims_dir: "/home/{{ mise_user }}/.local/share/mise/shims"
+mise_zprofile_file: "/home/{{ mise_user }}/.zprofile"
+mise_zsh_init_file: "/home/{{ mise_user }}/.zshrc.d/mise.zsh"
+
+mise_install_script_url: https://mise.run
+mise_global_tools: {}

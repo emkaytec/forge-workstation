@@ -1,0 +1,8 @@
+[Unit]
+Description=Workstation idle shutdown checker
+After=network-online.target
+ConditionPathExists=/usr/local/bin/workstation-idle-shutdown-check.sh
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/workstation-idle-shutdown-check.sh

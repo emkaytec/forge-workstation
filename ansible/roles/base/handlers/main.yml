@@ -1,0 +1,8 @@
+---
+- name: Generate locales
+  ansible.builtin.command: locale-gen
+  changed_when: false
+
+- name: Reconfigure tzdata
+  ansible.builtin.command: dpkg-reconfigure -f noninteractive tzdata
+  changed_when: false

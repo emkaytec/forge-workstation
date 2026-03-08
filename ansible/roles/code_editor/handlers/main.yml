@@ -1,0 +1,10 @@
+---
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart code-server
+  ansible.builtin.systemd:
+    name: "{{ code_editor_service_name }}"
+    state: restarted
+  when: not ansible_check_mode

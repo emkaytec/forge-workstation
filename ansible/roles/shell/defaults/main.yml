@@ -1,0 +1,26 @@
+---
+shell_user: "{{ workstation_primary_user }}"
+shell_group: "{{ workstation_primary_group }}"
+
+shell_packages:
+  - less
+  - zsh
+
+shell_local_bin_path: "/home/{{ shell_user }}/.local/bin"
+shell_zsh_profile_dir: "/home/{{ shell_user }}/.zshrc.d"
+shell_zsh_home: "/home/{{ shell_user }}/.oh-my-zsh"
+shell_zsh_repo: https://github.com/ohmyzsh/ohmyzsh.git
+shell_zsh_version: master
+shell_zsh_theme: wiscotrashpanda
+shell_zsh_plugins:
+  - git
+
+shell_aliases:
+  ll: ls -alF
+  la: ls -A
+  l: ls -CF
+
+shell_history_size: 50000
+shell_history_file_size: 100000
+shell_default_editor: vim
+shell_default_pager: less

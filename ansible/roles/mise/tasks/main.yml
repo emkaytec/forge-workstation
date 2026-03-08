@@ -1,0 +1,58 @@
+---
+- name: Check whether mise is installed
+  ansible.builtin.stat:
+    path: "{{ mise_bin_path }}"
+  register: mise_bin_stat
+
+- name: Ensure mise config directory exists
+  ansible.builtin.file:
+    path: "{{ mise_config_dir }}"
+    state: directory
+    owner: "{{ mise_user }}"
+    group: "{{ mise_group }}"
+    mode: "0755"
+
+- name: Install mise
+  become: true
+  become_user: "{{ mise_user }}"
+  ansible.builtin.shell: curl -fsSL "{{ mise_install_script_url }}" | sh
+  args:
+    executable: /bin/bash
+    creates: "{{ mise_bin_path }}"
+  when:
+    - not mise_bin_stat.stat.exists
+    - not ansible_check_mode
+
+- name: Install mise zsh activation snippet
+  ansible.builtin.copy:
+    dest: "{{ mise_zsh_init_file }}"
+    content: |
+      eval "$({{ mise_bin_path }} activate zsh)"
+    owner: "{{ mise_user }}"
+    group: "{{ mise_group }}"
+    mode: "0644"
+
+- name: Ensure mise shims are available in login shells
+  ansible.builtin.blockinfile:
+    path: "{{ mise_zprofile_file }}"
+    marker: "# {mark} ANSIBLE MANAGED MISE SHIMS"
+    create: true
+    owner: "{{ mise_user }}"
+    group: "{{ mise_group }}"
+    mode: "0644"
+    block: |
+      if [ -d "{{ mise_shims_dir }}" ]; then
+        export PATH="{{ mise_shims_dir }}:$PATH"
+      fi
+
+- name: Install mise global config
+  ansible.builtin.template:
+    src: config.toml.j2
+    dest: "{{ mise_config_file }}"
+    owner: "{{ mise_user }}"
+    group: "{{ mise_group }}"
+    mode: "0644"
+  notify: Run mise install
+
+- name: Run pending mise installs immediately
+  ansible.builtin.meta: flush_handlers

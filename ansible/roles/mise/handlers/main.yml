@@ -1,0 +1,9 @@
+---
+- name: Run mise install
+  become: true
+  become_user: "{{ mise_user }}"
+  ansible.builtin.command: "{{ mise_bin_path }} install"
+  changed_when: false
+  when:
+    - not ansible_check_mode
+    - mise_global_tools | length > 0

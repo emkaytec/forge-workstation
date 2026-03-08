@@ -1,0 +1,83 @@
+---
+- name: Ensure apt keyring directory exists
+  ansible.builtin.file:
+    path: "{{ docker_apt_keyring_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install Docker apt signing key
+  ansible.builtin.get_url:
+    url: "{{ docker_apt_key_url }}"
+    dest: "{{ docker_apt_key_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure Docker apt repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/docker.list
+    content: "{{ docker_apt_repo }}\n"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Check installed Docker version
+  ansible.builtin.command: docker --version
+  register: docker_version_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name: "{{ docker_packages }}"
+    state: present
+    update_cache: true
+  when:
+    - not ansible_check_mode or docker_version_check.rc == 0
+
+- name: Install kubectl binary
+  ansible.builtin.get_url:
+    url: "{{ kubectl_download_url }}"
+    dest: "{{ kubectl_binary_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Check installed Helm version
+  ansible.builtin.command: "{{ helm_binary_path }} version --template {{ '{{ .Version }}' }}"
+  register: helm_version_check
+  changed_when: false
+  failed_when: false
+  check_mode: false
+
+- name: Install Helm binary
+  ansible.builtin.shell: >-
+    tmpdir=$(mktemp -d) &&
+    curl -fsSL "{{ helm_download_url }}" -o "$tmpdir/helm.tar.gz" &&
+    tar -xzf "$tmpdir/helm.tar.gz" -C "$tmpdir" &&
+    install -m 0755 "$tmpdir/linux-{{ helm_arch }}/helm" "{{ helm_binary_path }}" &&
+    rm -rf "$tmpdir"
+  args:
+    executable: /bin/bash
+  when:
+    - not ansible_check_mode
+    - helm_version_check.rc != 0 or (helm_version_check.stdout is not search(helm_version | regex_escape()))
+
+- name: Ensure docker service is enabled and started
+  ansible.builtin.systemd:
+    name: docker
+    enabled: true
+    state: started
+  when:
+    - not ansible_check_mode or docker_version_check.rc == 0
+
+- name: Ensure primary user is in docker group
+  ansible.builtin.user:
+    name: "{{ docker_user }}"
+    groups: docker
+    append: true
+  when:
+    - not ansible_check_mode or docker_version_check.rc == 0

@@ -1,0 +1,13 @@
+all:
+  vars:
+    git_user_name: Your Name
+    git_user_email: you@example.com
+  children:
+    workstations:
+      hosts:
+        workstation-name:
+          ansible_host: tailscale-hostname-or-ip
+          base_extra_packages: []
+        another-workstation:
+          ansible_host: another-tailnet-host
+          git_user_email: alternate-email@example.com

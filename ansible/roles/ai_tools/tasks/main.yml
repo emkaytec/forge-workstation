@@ -1,0 +1,69 @@
+---
+- name: Ensure AI tools config directory exists
+  ansible.builtin.file:
+    path: "{{ ai_tools_config_dir }}"
+    state: directory
+    owner: "{{ ai_tools_user }}"
+    group: "{{ ai_tools_group }}"
+    mode: "0755"
+
+- name: Check whether OpenCode is installed
+  ansible.builtin.stat:
+    path: "{{ ai_tools_opencode_binary_path }}"
+  register: ai_tools_opencode_binary_stat
+  when: ai_tools_install_opencode | bool
+
+- name: Install OpenCode
+  ansible.builtin.shell: >-
+    tmpdir=$(mktemp -d) &&
+    curl -fsSL "{{ ai_tools_opencode_download_url }}" -o "$tmpdir/opencode.tar.gz" &&
+    tar -xzf "$tmpdir/opencode.tar.gz" -C "$tmpdir" &&
+    install -m 0755 "$tmpdir/opencode" "{{ ai_tools_opencode_binary_path }}" &&
+    rm -rf "$tmpdir"
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ ai_tools_user }}"
+  when:
+    - ai_tools_install_opencode | bool
+    - not ansible_check_mode
+    - not ai_tools_opencode_binary_stat.stat.exists
+
+- name: Check whether Claude Code is installed
+  ansible.builtin.stat:
+    path: "{{ ai_tools_claude_binary_path }}"
+  register: ai_tools_claude_binary_stat
+  when: ai_tools_install_claude_code | bool
+
+- name: Install Claude Code
+  ansible.builtin.shell: "{{ ai_tools_claude_install_cmd }}"
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ ai_tools_user }}"
+  when:
+    - ai_tools_install_claude_code | bool
+    - not ansible_check_mode
+    - not ai_tools_claude_binary_stat.stat.exists
+
+- name: Check whether Codex is installed
+  ansible.builtin.stat:
+    path: "{{ ai_tools_codex_binary_path }}"
+  register: ai_tools_codex_binary_stat
+  when: ai_tools_install_codex | bool
+
+- name: Install Codex
+  ansible.builtin.shell: >-
+    tmpdir=$(mktemp -d) &&
+    curl -fsSL "{{ ai_tools_codex_download_url }}" -o "$tmpdir/codex.tar.gz" &&
+    tar -xzf "$tmpdir/codex.tar.gz" -C "$tmpdir" &&
+    install -m 0755 "$tmpdir/codex-{{ ai_tools_codex_arch }}-unknown-linux-gnu" "{{ ai_tools_codex_binary_path }}" &&
+    rm -rf "$tmpdir"
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ ai_tools_user }}"
+  when:
+    - ai_tools_install_codex | bool
+    - not ansible_check_mode
+    - not ai_tools_codex_binary_stat.stat.exists

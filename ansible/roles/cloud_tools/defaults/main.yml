@@ -1,0 +1,29 @@
+---
+cloud_tools_apt_keyring_dir: /etc/apt/keyrings
+
+cloud_tools_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+cloud_tools_arch: "{{ cloud_tools_arch_map.get(ansible_facts['architecture'], ansible_facts['architecture']) }}"
+
+terraform_apt_key_url: https://apt.releases.hashicorp.com/gpg
+terraform_apt_key_path: "{{ cloud_tools_apt_keyring_dir }}/hashicorp.asc"
+terraform_apt_repo: "deb [arch={{ cloud_tools_arch }} signed-by={{ terraform_apt_key_path }}] https://apt.releases.hashicorp.com {{ ansible_facts['distribution_release'] }} main"
+gh_apt_key_url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+gh_apt_key_path: "{{ cloud_tools_apt_keyring_dir }}/githubcli-archive-keyring.gpg"
+gh_apt_repo: "deb [arch={{ cloud_tools_arch }} signed-by={{ gh_apt_key_path }}] https://cli.github.com/packages stable main"
+gh_package_name: gh
+
+gcloud_apt_key_url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+gcloud_apt_key_path: "{{ cloud_tools_apt_keyring_dir }}/google-cloud.asc"
+gcloud_apt_repo: "deb [signed-by={{ gcloud_apt_key_path }}] https://packages.cloud.google.com/apt cloud-sdk main"
+gcloud_package_name: google-cloud-cli
+
+awscli_version: 2.31.0
+awscli_arch_map:
+  x86_64: x86_64
+  aarch64: aarch64
+awscli_arch: "{{ awscli_arch_map.get(ansible_facts['architecture'], ansible_facts['architecture']) }}"
+awscli_download_url: "https://awscli.amazonaws.com/awscli-exe-linux-{{ awscli_arch }}-{{ awscli_version }}.zip"
+awscli_install_dir: /usr/local/aws-cli
+awscli_binary_path: /usr/local/bin/aws

@@ -1,0 +1,77 @@
+---
+- name: Check whether code-server is installed
+  ansible.builtin.stat:
+    path: "{{ code_editor_bin_path }}"
+  register: code_editor_bin_stat
+
+- name: Ensure code-server config directory exists
+  ansible.builtin.file:
+    path: "{{ code_editor_config_dir }}"
+    state: directory
+    owner: "{{ code_editor_user }}"
+    group: "{{ code_editor_group }}"
+    mode: "0755"
+
+- name: Install code-server with standalone installer
+  ansible.builtin.shell: >-
+    curl -fsSL "{{ code_editor_install_script_url }}" |
+    sh -s -- --method=standalone
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ code_editor_user }}"
+  when:
+    - not ansible_check_mode
+    - not code_editor_bin_stat.stat.exists
+
+- name: Install code-server config
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: "{{ code_editor_config_file }}"
+    owner: "{{ code_editor_user }}"
+    group: "{{ code_editor_group }}"
+    mode: "0644"
+  notify: Restart code-server
+
+- name: Install code-server systemd service
+  ansible.builtin.template:
+    src: code-server.service.j2
+    dest: "/etc/systemd/system/{{ code_editor_service_name }}.service"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart code-server
+
+- name: Reload systemd if needed
+  ansible.builtin.meta: flush_handlers
+
+- name: Check Tailscale Serve status
+  ansible.builtin.command: tailscale serve status --json
+  register: code_editor_tailscale_serve_status
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  become: true
+
+- name: Configure Tailscale Serve HTTPS for code-server
+  ansible.builtin.shell: >-
+    tailscale serve reset &&
+    tailscale serve --bg --https={{ code_editor_tailscale_https_port }} {{ code_editor_tailscale_target }}
+  args:
+    executable: /bin/bash
+  become: true
+  when:
+    - not ansible_check_mode
+    - code_editor_tailscale_serve_status.rc != 0
+      or (code_editor_tailscale_serve_status.stdout is not search('"8443"\s*:\s*\{\s*"HTTPS"\s*:\s*true'))
+      or (code_editor_tailscale_serve_status.stdout is search('"Foreground"\s*:'))
+      or (code_editor_tailscale_serve_status.stdout is not search('"Proxy"\s*:\s*"http://127.0.0.1:8443"'))
+
+- name: Enable and start code-server service
+  ansible.builtin.systemd:
+    name: "{{ code_editor_service_name }}"
+    enabled: true
+    state: started
+  when: not ansible_check_mode

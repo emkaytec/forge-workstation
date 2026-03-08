@@ -1,0 +1,32 @@
+---
+ai_tools_user: "{{ workstation_primary_user }}"
+ai_tools_group: "{{ workstation_primary_group }}"
+ai_tools_home: "/home/{{ ai_tools_user }}"
+ai_tools_bin_dir: "{{ ai_tools_home }}/.local/bin"
+ai_tools_config_dir: "{{ ai_tools_home }}/.config/ai-tools"
+
+ai_tools_install_opencode: true
+ai_tools_install_claude_code: true
+ai_tools_install_codex: true
+
+ai_tools_opencode_version: latest
+ai_tools_opencode_arch_map:
+  x86_64: x64
+  aarch64: arm64
+ai_tools_opencode_arch: "{{ ai_tools_opencode_arch_map.get(ansible_facts['architecture'], ansible_facts['architecture']) }}"
+ai_tools_opencode_release_path: "{{ (ai_tools_opencode_version == 'latest') | ternary('latest/download', 'download/' ~ ai_tools_opencode_version) }}"
+ai_tools_opencode_download_url: "https://github.com/anomalyco/opencode/releases/{{ ai_tools_opencode_release_path }}/opencode-linux-{{ ai_tools_opencode_arch }}.tar.gz"
+ai_tools_opencode_binary_path: "{{ ai_tools_bin_dir }}/opencode"
+
+ai_tools_claude_channel: latest
+ai_tools_claude_binary_path: "{{ ai_tools_bin_dir }}/claude"
+ai_tools_claude_install_cmd: "curl -fsSL https://claude.ai/install.sh | bash -s {{ ai_tools_claude_channel }}"
+
+ai_tools_codex_version: latest
+ai_tools_codex_arch_map:
+  x86_64: x86_64
+  aarch64: aarch64
+ai_tools_codex_arch: "{{ ai_tools_codex_arch_map.get(ansible_facts['architecture'], ansible_facts['architecture']) }}"
+ai_tools_codex_release_path: "{{ (ai_tools_codex_version == 'latest') | ternary('latest/download', 'download/' ~ ai_tools_codex_version) }}"
+ai_tools_codex_download_url: "https://github.com/openai/codex/releases/{{ ai_tools_codex_release_path }}/codex-{{ ai_tools_codex_arch }}-unknown-linux-gnu.tar.gz"
+ai_tools_codex_binary_path: "{{ ai_tools_bin_dir }}/codex"

@@ -1,0 +1,8 @@
+---
+- name: Install git configuration
+  ansible.builtin.template:
+    src: gitconfig.j2
+    dest: "/home/{{ git_user }}/.gitconfig"
+    owner: "{{ git_user }}"
+    group: "{{ git_group }}"
+    mode: "0644"

@@ -1,0 +1,25 @@
+[init]
+    defaultBranch = {{ git_init_default_branch }}
+[pull]
+    rebase = {{ git_pull_rebase | ternary('true', 'false') }}
+[fetch]
+    prune = {{ git_fetch_prune | ternary('true', 'false') }}
+[core]
+    editor = {{ git_default_editor }}
+    pager = {{ git_default_pager }}
+    autocrlf = {{ git_default_autocrlf }}
+[merge]
+    conflictstyle = {{ git_default_merge_conflictstyle }}
+{% if git_user_name | length > 0 or git_user_email | length > 0 %}
+[user]
+{% if git_user_name | length > 0 %}
+    name = {{ git_user_name }}
+{% endif %}
+{% if git_user_email | length > 0 %}
+    email = {{ git_user_email }}
+{% endif %}
+{% endif %}
+[alias]
+{% for alias_name, alias_value in git_aliases.items() %}
+    {{ alias_name }} = {{ alias_value }}
+{% endfor %}

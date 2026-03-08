@@ -1,0 +1,17 @@
+---
+- name: Bootstrap workstation base configuration
+  hosts: workstations
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: base
+    - role: cloud_tools
+    - role: code_editor
+    - role: idle_shutdown
+    - role: shell
+    - role: git
+    - role: dev_tools
+    - role: mise
+    - role: docker
+    - role: ai_tools

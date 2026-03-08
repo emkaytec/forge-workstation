@@ -1,0 +1,13 @@
+{% if mise_global_tools | length > 0 %}
+[tools]
+{% for tool_name, tool_version in mise_global_tools.items() %}
+{{ tool_name }} = "{{ tool_version }}"
+{% endfor %}
+{% else %}
+# Global mise tool versions can be declared here.
+# Example:
+# [tools]
+# python = "3.12"
+# node = "22"
+# go = "1.24"
+{% endif %}

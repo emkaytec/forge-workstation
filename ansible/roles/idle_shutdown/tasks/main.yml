@@ -1,0 +1,84 @@
+---
+- name: Ensure idle shutdown directories exist
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "{{ item.mode }}"
+  loop:
+    - path: /etc/workstation
+      mode: "0755"
+    - path: /var/lib/workstation
+      mode: "0755"
+
+- name: Check idle shutdown log file
+  ansible.builtin.stat:
+    path: "{{ idle_shutdown_log_file }}"
+  register: idle_shutdown_log_file_stat
+
+- name: Ensure idle shutdown log file exists
+  ansible.builtin.file:
+    path: "{{ idle_shutdown_log_file }}"
+    state: touch
+    owner: root
+    group: root
+    mode: "0644"
+  when: not idle_shutdown_log_file_stat.stat.exists
+
+- name: Install idle shutdown checker script
+  ansible.builtin.template:
+    src: workstation-idle-shutdown-check.sh.j2
+    dest: /usr/local/bin/workstation-idle-shutdown-check.sh
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Reload systemd
+
+- name: Install idle shutdown systemd service
+  ansible.builtin.template:
+    src: workstation-idle-shutdown.service.j2
+    dest: /etc/systemd/system/workstation-idle-shutdown.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Install idle shutdown systemd timer
+  ansible.builtin.template:
+    src: workstation-idle-shutdown.timer.j2
+    dest: /etc/systemd/system/workstation-idle-shutdown.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload systemd
+
+- name: Reload systemd if unit files changed
+  ansible.builtin.meta: flush_handlers
+
+- name: Enable and start idle shutdown timer
+  ansible.builtin.systemd:
+    name: workstation-idle-shutdown.timer
+    enabled: true
+    state: started
+  when:
+    - enable_idle_shutdown | bool
+    - not ansible_check_mode
+
+- name: Disable and stop idle shutdown timer
+  ansible.builtin.systemd:
+    name: workstation-idle-shutdown.timer
+    enabled: false
+    state: stopped
+  when:
+    - not (enable_idle_shutdown | bool)
+    - not ansible_check_mode
+
+- name: Ensure idle shutdown service is stopped when feature disabled
+  ansible.builtin.systemd:
+    name: workstation-idle-shutdown.service
+    state: stopped
+  failed_when: false
+  when:
+    - not (enable_idle_shutdown | bool)
+    - not ansible_check_mode

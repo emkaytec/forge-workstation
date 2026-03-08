@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TIMEOUT_SECONDS={{ (idle_shutdown_timeout_minutes | int) * 60 }}
+STATE_FILE="{{ idle_shutdown_state_file }}"
+GUARD_FILE="{{ idle_shutdown_guard_file }}"
+LOG_FILE="{{ idle_shutdown_log_file }}"
+
+log_msg() {
+  local message="$1"
+  logger -t workstation-idle-shutdown "$message"
+  printf '%s %s\n' "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" "$message" >>"$LOG_FILE"
+}
+
+touch_idle_state() {
+  date +%s >"$STATE_FILE"
+}
+
+has_active_sessions() {
+{% for port in idle_shutdown_active_ports %}
+  if ss -tnpH state established '( sport = :{{ port }} )' 2>/dev/null | grep -q .; then
+    return 0
+  fi
+{% endfor %}
+
+  local uid tty pid ppid pcomm
+  while read -r uid tty pid ppid; do
+    [ "$uid" -lt 1000 ] 2>/dev/null && continue
+    [ "$tty" = "?" ] && continue
+    pcomm="$(cat /proc/"$ppid"/comm 2>/dev/null || true)"
+    case "$pcomm" in
+      tmux|screen) continue ;;
+    esac
+    return 0
+  done < <(ps -eo uid,tty,pid,ppid --no-headers 2>/dev/null)
+
+  return 1
+}
+
+main() {
+  if [ -f "$GUARD_FILE" ]; then
+    log_msg "Idle shutdown skipped because guard file exists: $GUARD_FILE"
+    exit 0
+  fi
+
+  if has_active_sessions; then
+    touch_idle_state
+    exit 0
+  fi
+
+  local now_epoch last_active_epoch elapsed_seconds
+  now_epoch="$(date +%s)"
+
+  if [ ! -f "$STATE_FILE" ]; then
+    echo "$now_epoch" >"$STATE_FILE"
+    log_msg "Idle shutdown timer initialized."
+    exit 0
+  fi
+
+  last_active_epoch="$(cat "$STATE_FILE" 2>/dev/null || true)"
+  if ! [[ "$last_active_epoch" =~ ^[0-9]+$ ]]; then
+    echo "$now_epoch" >"$STATE_FILE"
+    log_msg "Idle shutdown state was invalid and has been reset."
+    exit 0
+  fi
+
+  elapsed_seconds=$((now_epoch - last_active_epoch))
+  if [ "$elapsed_seconds" -lt "$TIMEOUT_SECONDS" ]; then
+    exit 0
+  fi
+
+  log_msg "No active sessions for ${elapsed_seconds}s (threshold ${TIMEOUT_SECONDS}s). Powering off."
+  systemctl poweroff
+}
+
+main "$@"

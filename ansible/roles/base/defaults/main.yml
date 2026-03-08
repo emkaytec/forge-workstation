@@ -1,0 +1,18 @@
+---
+workstation_timezone: Etc/UTC
+workstation_locale: en_US.UTF-8
+
+base_packages:
+  - curl
+  - git
+  - htop
+  - iproute2
+  - jq
+  - locales
+  - rsync
+  - tmux
+  - tzdata
+  - unzip
+  - vim
+
+base_extra_packages: []

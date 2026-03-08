@@ -1,0 +1,12 @@
+[Unit]
+Description=Run workstation idle shutdown checker periodically
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec={{ idle_shutdown_check_interval_minutes | int }}min
+Unit=workstation-idle-shutdown.service
+AccuracySec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,22 @@
+---
+git_user: "{{ workstation_primary_user }}"
+git_group: "{{ workstation_primary_group }}"
+
+git_default_branch: main
+git_pull_rebase: false
+git_fetch_prune: true
+git_init_default_branch: "{{ git_default_branch }}"
+git_default_editor: vim
+git_default_pager: less
+git_default_autocrlf: input
+git_default_merge_conflictstyle: zdiff3
+
+git_user_name: ""
+git_user_email: ""
+
+git_aliases:
+  st: status -sb
+  co: checkout
+  br: branch
+  ci: commit
+  lg: log --graph --oneline --decorate --all

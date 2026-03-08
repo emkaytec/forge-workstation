@@ -1,0 +1,10 @@
+---
+enable_idle_shutdown: true
+idle_shutdown_timeout_minutes: 60
+idle_shutdown_check_interval_minutes: 5
+idle_shutdown_guard_file: /etc/workstation/disable-idle-shutdown
+idle_shutdown_state_file: /var/lib/workstation/idle-last-active-epoch
+idle_shutdown_log_file: /var/log/workstation-idle-shutdown.log
+idle_shutdown_active_ports:
+  - 22
+  - 8443

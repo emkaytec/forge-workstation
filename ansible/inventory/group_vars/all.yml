@@ -1,0 +1,11 @@
+ansible_user: forge
+ansible_python_interpreter: /usr/bin/python3
+
+workstation_primary_user: forge
+workstation_primary_group: forge
+
+mise_global_tools:
+  terraform: 1.14.6
+  python: 3.14.3
+  go: 1.26.1
+  node: 25.8.0

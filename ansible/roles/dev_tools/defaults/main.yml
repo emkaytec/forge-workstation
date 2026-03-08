@@ -1,0 +1,11 @@
+---
+dev_tools_packages:
+  - build-essential
+  - fd-find
+  - fzf
+  - ripgrep
+  - tree
+
+dev_tools_symlinks:
+  - src: /usr/bin/fdfind
+    dest: /usr/local/bin/fd

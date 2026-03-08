@@ -1,0 +1,16 @@
+[Unit]
+Description=code-server
+After=network.target
+
+[Service]
+Type=simple
+User={{ code_editor_user }}
+Group={{ code_editor_group }}
+WorkingDirectory={{ code_editor_workspace_dir }}
+Environment=HOME={{ code_editor_home }}
+ExecStart={{ code_editor_bin_path }} --config {{ code_editor_config_file }} {{ code_editor_workspace_dir }}
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
